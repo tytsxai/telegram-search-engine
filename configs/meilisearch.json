@@ -1,0 +1,36 @@
+{
+  "searchableAttributes": [
+    "text",
+    "text_norm",
+    "pinyin",
+    "trad",
+    "simp",
+    "chat_title"
+  ],
+  "filterableAttributes": [
+    "chat_id",
+    "chat_title",
+    "date",
+    "media_type"
+  ],
+  "sortableAttributes": [
+    "date"
+  ],
+  "typoTolerance": {
+    "enabled": true,
+    "minWordSizeForTypos": {
+      "oneTypo": 5,
+      "twoTypos": 9
+    },
+    "disableOnWords": [],
+    "disableOnAttributes": []
+  },
+  "rankingRules": [
+    "words",
+    "typo",
+    "proximity",
+    "attribute",
+    "sort",
+    "exactness"
+  ]
+}

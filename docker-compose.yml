@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  meilisearch:
+    image: getmeili/meilisearch:v1.6
+    container_name: telegram-search-meili
+    ports:
+      - "7700:7700"
+    environment:
+      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY:-masterKey123}
+      - MEILI_ENV=development
+    volumes:
+      - meili_data:/meili_data
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: telegram-search-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+
+volumes:
+  meili_data:
+  redis_data:

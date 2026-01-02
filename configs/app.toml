@@ -1,0 +1,28 @@
+[app]
+name = "telegram-search-engine"
+debug = false
+
+[telegram]
+bot_token = ""
+api_id = 0
+api_hash = ""
+
+[meilisearch]
+host = "http://localhost:7700"
+api_key = ""
+index_name = "telegram_messages"
+
+[redis]
+host = "localhost"
+port = 6379
+db = 0
+cache_ttl = 3600
+
+[search]
+default_limit = 20
+max_limit = 100
+
+[indexer]
+batch_size = 100
+rate_limit_delay = 1.0
+state_flush_interval = 1.0

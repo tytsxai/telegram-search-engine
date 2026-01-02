@@ -1,0 +1,35 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+.pytest_cache/
+.coverage
+htmlcov/
+
+.mypy_cache/
+.ruff_cache/
+
+.venv/
+venv/
+.env
+
+*.egg-info/
+dist/
+build/
+
+.DS_Store
+Thumbs.db
+
+# Telegram session files
+*.session
+*.session-journal
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Logs
+*.log
+logs/
