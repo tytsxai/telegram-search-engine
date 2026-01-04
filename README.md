@@ -1,6 +1,43 @@
-# Telegram 搜索引擎
+# Telegram Search Engine
+
+[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Meilisearch](https://img.shields.io/badge/Meilisearch-1.6+-purple.svg)](https://www.meilisearch.com/)
+[![Redis](https://img.shields.io/badge/Redis-7+-red.svg)](https://redis.io/)
+
+[English](#english) | [中文](#中文)
+
+---
+
+## English
+
+High-performance Telegram channel message crawler and full-text search engine with built-in Chinese NLP pipeline.
+
+### Highlights
+
+- **⚡ Blazing Fast** - Millisecond search response powered by Meilisearch
+- **🇨🇳 Chinese Optimized** - jieba tokenization, pinyin index, Traditional/Simplified conversion
+- **🔄 Real-time Sync** - Live message monitoring + historical batch sync
+- **🧹 Smart Dedup** - SimHash algorithm filters near-duplicate content
+- **🤖 Bot Interface** - Search directly via Telegram Bot
+- **📊 Analytics** - Track popular keywords and search trends
+
+---
+
+## 中文
 
 高性能 Telegram 频道消息采集与全文搜索系统，内置中文处理管道（分词、拼音、繁简转换）与缓存加速。
+
+### 为什么选择这个项目？
+
+| 特性 | 说明 |
+|------|------|
+| 🚀 **毫秒级搜索** | Meilisearch 驱动，支持百万级消息即时检索 |
+| 🇨🇳 **中文深度优化** | jieba 分词 + 拼音索引 + 繁简转换，搜索更精准 |
+| 🔄 **实时 + 历史** | 双模式采集，不漏掉任何消息 |
+| 🧹 **智能去重** | SimHash 近似匹配，过滤转发和重复内容 |
+| 💾 **缓存加速** | Redis 热点缓存，高并发无压力 |
+| 🤖 **开箱即用** | Telegram Bot 直接搜索，无需额外部署 |
 
 ## 功能特性
 
@@ -45,7 +82,7 @@
 ### 1. 克隆项目
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/tytsxai/telegram-search-engine.git
 cd telegram-search-engine
 ```
 
@@ -168,3 +205,18 @@ mypy telegram_search
 ## License
 
 MIT
+
+## Contributing
+
+欢迎贡献！请查看 [CONTRIBUTING.md](CONTRIBUTING.md) 了解详情。
+
+## Star History
+
+如果这个项目对你有帮助，请给一个 ⭐ Star！
+
+## Acknowledgments
+
+- [Meilisearch](https://www.meilisearch.com/) - 快速、相关性强的搜索引擎
+- [Telethon](https://github.com/LonamiWebs/Telethon) - 优秀的 Telegram MTProto 客户端
+- [jieba](https://github.com/fxsjy/jieba) - 中文分词利器
+- [OpenCC](https://github.com/BYVoid/OpenCC) - 繁简转换工具
