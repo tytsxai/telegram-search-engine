@@ -1,152 +1,126 @@
 # 部署指南
 
-## Docker 部署
+## 目标
 
-### 启动依赖服务
+本文档对应当前仓库的可上线部署方式，不依赖额外编排系统，只覆盖：
 
-```bash
-docker-compose up -d
-```
+- Meilisearch
+- Redis
+- Crawler
+- Bot
 
-服务包括：
-- **Meilisearch**: 端口 7700
-- **Redis**: 端口 6379
+## 生产前提
 
-### 验证服务
+- Python 3.11+
+- Docker Compose v2
+- 已准备 `.env.production`
+- 已为 crawler 预留持久化目录 `/data`
+- 已获取 Telegram API ID / Hash 与 Bot Token
 
-```bash
-# Meilisearch
-curl http://localhost:7700/health
+## 必填环境变量
 
-# Redis
-redis-cli ping
-```
-
-## 生产环境配置
-
-### Meilisearch
-
-```yaml
-# docker-compose.prod.yml
-services:
-  meilisearch:
-    image: getmeili/meilisearch:v1.6
-    environment:
-      - MEILI_MASTER_KEY=${MEILI_MASTER_KEY}
-      - MEILI_ENV=production
-    volumes:
-      - /data/meili:/meili_data
-    restart: always
-```
-
-### Redis
-
-```yaml
-services:
-  redis:
-    image: redis:7-alpine
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
-    volumes:
-      - /data/redis:/data
-    restart: always
-```
-
-## 进程管理
-
-### systemd 服务
-
-Bot 服务 `/etc/systemd/system/telegram-bot.service`：
-
-```ini
-[Unit]
-Description=Telegram Search Bot
-After=network.target
-
-[Service]
-Type=simple
-User=app
-WorkingDirectory=/opt/telegram-search
-ExecStart=/opt/telegram-search/.venv/bin/python -m apps.bot.main
-Restart=always
-EnvironmentFile=/opt/telegram-search/.env
-
-[Install]
-WantedBy=multi-user.target
-```
-
-采集器服务：
-
-```ini
-[Unit]
-Description=Telegram Crawler
-After=network.target
-
-[Service]
-Type=simple
-User=app
-WorkingDirectory=/opt/telegram-search
-ExecStart=/opt/telegram-search/.venv/bin/python -m apps.crawler.main --mode realtime
-Restart=always
-EnvironmentFile=/opt/telegram-search/.env
-
-[Install]
-WantedBy=multi-user.target
-```
-
-启用服务：
+最少需要：
 
 ```bash
-sudo systemctl enable telegram-bot telegram-crawler
-sudo systemctl start telegram-bot telegram-crawler
+APP_ENV=production
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_API_ID=
+TELEGRAM_API_HASH=
+MEILI_MASTER_KEY=
+REDIS_PASSWORD=
 ```
 
-## 监控
-
-### 日志
-
-应用使用 structlog 输出 JSON 格式日志：
+推荐同时显式指定：
 
 ```bash
-journalctl -u telegram-bot -f
+MEILI_HOST=http://meilisearch:7700
+MEILI_INDEX=telegram_messages
+TELEGRAM_SESSION_PATH=/data/telegram/session
+STATE_FILE_PATH=/data/state.json
+CHANNELS_CONFIG_PATH=/data/channels.json
+MEILI_SETTINGS_PATH=configs/meilisearch.json
 ```
 
-### 健康检查
+## 首次启动前
+
+### 1. 配置频道
+
+频道配置必须落到生产持久化路径，而不是容器临时文件系统：
 
 ```bash
-# Meilisearch 索引状态
-curl http://localhost:7700/indexes/telegram_messages/stats
-
-# Redis 连接
-redis-cli info clients
+export CHANNELS_CONFIG_PATH=/data/channels.json
+python3 -m apps.crawler.channels add -1001234567890 --username example --title "Example"
 ```
 
-## 备份
+### 2. 初始化 Telethon Session
 
-### Meilisearch 数据
+`crawler` 首次运行需要交互式登录 Telegram。在线上无 TTY 服务里直接启动会失败，这是故意的保护，避免服务卡死在验证码输入。
+
+先执行一次交互式启动：
 
 ```bash
-# 创建快照
-curl -X POST http://localhost:7700/snapshots
-
-# 数据目录
-/meili_data/data.ms/
+docker compose -f docker-compose.yml -f docker-compose.prod.yml run --rm crawler \
+  python -m apps.crawler.main --mode historical --limit 1
 ```
 
-### Redis 数据
+登录完成后，确认持久化卷内存在：
+
+- `/data/telegram/session.session`
+- `/data/channels.json`
+
+## 启动
 
 ```bash
-# RDB 快照
-redis-cli BGSAVE
-
-# AOF 文件
-/data/appendonly.aof
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
 
-## 故障排查
+## 健康检查
 
-| 问题 | 检查项 |
-|------|--------|
-| Bot 无响应 | Token 配置、网络连接 |
-| 搜索无结果 | Meilisearch 索引状态 |
-| 采集器断开 | API 凭证、Session 文件 |
-| 缓存失效 | Redis 连接、TTL 配置 |
+容器内已内置健康检查：
+
+- `bot`: `python -m telegram_search.health --component bot`
+- `crawler`: `python -m telegram_search.health --component crawler`
+- `meilisearch`: `GET /health`
+- `redis`: `redis-cli ping`
+
+手工验证：
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml ps
+docker compose -f docker-compose.yml -f docker-compose.prod.yml logs -f bot crawler
+```
+
+## 启动后确认项
+
+- `crawler` 日志出现 `crawler_initialized`
+- `bot` 日志出现 `bot_starting`
+- `healthcheck_ok` 周期性通过
+- Meilisearch 索引已存在且已应用 `configs/meilisearch.json`
+- 搜索命令可返回结果
+
+## 关键部署约束
+
+- `MEILI_MASTER_KEY` 在生产环境不能为空
+- `REDIS_PASSWORD` 在生产环境不能为空
+- `/data` 必须持久化，否则 crawler 重建后会丢失：
+  - 历史同步进度
+  - 已配置频道列表
+  - Telethon session
+
+## systemd 部署
+
+如果不用 Docker，最少也要满足同样约束：
+
+- 固定 `WorkingDirectory`
+- 使用持久化 `TELEGRAM_SESSION_PATH`
+- 使用持久化 `STATE_FILE_PATH`
+- 启动前执行 `python -m telegram_search.health --component <bot|crawler>`
+- `Restart=always`
+
+## 失败时先查什么
+
+- `healthcheck_failed`
+- `meili_request_failed`
+- `crawler_error`
+- `search_error`
+- `telegram_flood_wait`

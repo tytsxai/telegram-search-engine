@@ -91,14 +91,14 @@ Telegram 搜索引擎采用分层架构设计，将消息采集、文本处理�
 
 | 模块 | 文件 | 职责 |
 |------|------|------|
-| CacheManager | `cache/manager.py` | Redis 缓存管理 |
-| CacheKey | `cache/keys.py` | 缓存键生成策略 |
+| RedisCache | `cache/redis_cache.py` | Redis 缓存管理 |
+| RedisFactory | `cache/redis_factory.py` | Redis 连接与重试策略 |
 
 ### 5. 统计层 (Stats)
 
 | 模块 | 文件 | 职责 |
 |------|------|------|
-| StatsService | `stats/service.py` | 搜索统计服务 |
+| StatsService | `stats/stats_service.py` | 搜索统计服务 |
 
 ## 数据流
 
@@ -122,7 +122,7 @@ Telegram 搜索引擎采用分层架构设计，将消息采集、文本处理�
 ```
 1. 用户通过 Bot 发送 /search 命令
 2. SearchService 接收查询
-3. CacheManager 检查缓存
+3. RedisCache 检查缓存
 4. 缓存未命中：
    - QueryParser 解析查询
    - MeiliClient 执行搜索

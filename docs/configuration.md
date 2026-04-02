@@ -8,6 +8,20 @@
 
 环境变量 > 配置文件 > 默认值
 
+## 应用级配置
+
+```toml
+[app]
+name = "telegram-search-engine"
+debug = false
+environment = "development"
+```
+
+| 环境变量 | 说明 | 默认值 |
+|---------|------|--------|
+| `APP_ENV` | 运行环境，`production` 时会强制校验安全配置 | `development` |
+| `DEBUG` | 是否开启调试日志 | `false` |
+
 ## Telegram 配置
 
 ```toml
@@ -15,6 +29,7 @@
 bot_token = ""      # Bot Token (从 @BotFather 获取)
 api_id = 0          # API ID (从 my.telegram.org 获取)
 api_hash = ""       # API Hash
+session_path = "session"
 ```
 
 | 环境变量 | 说明 |
@@ -22,6 +37,7 @@ api_hash = ""       # API Hash
 | `TELEGRAM_BOT_TOKEN` | Bot Token |
 | `TELEGRAM_API_ID` | API ID (整数) |
 | `TELEGRAM_API_HASH` | API Hash |
+| `TELEGRAM_SESSION_PATH` | Telethon session 文件路径（不带 `.session` 后缀） |
 
 ## Meilisearch 配置
 
@@ -32,6 +48,7 @@ api_key = ""
 index_name = "telegram_messages"
 timeout = 5
 max_retries = 3
+settings_path = "configs/meilisearch.json"
 ```
 
 | 环境变量 | 说明 | 默认值 |
@@ -41,6 +58,7 @@ max_retries = 3
 | `MEILI_INDEX` | 索引名称 | `telegram_messages` |
 | `MEILI_TIMEOUT` | 超时秒数 | `5` |
 | `MEILI_MAX_RETRIES` | 最大重试 | `3` |
+| `MEILI_SETTINGS_PATH` | 索引设置 JSON 文件 | `configs/meilisearch.json` |
 
 ## Redis 配置
 
@@ -49,6 +67,7 @@ max_retries = 3
 host = "localhost"
 port = 6379
 db = 0
+password = ""
 cache_ttl = 3600
 socket_timeout = 5
 socket_connect_timeout = 5
@@ -60,6 +79,7 @@ max_retries = 3
 | `REDIS_HOST` | 主机地址 | `localhost` |
 | `REDIS_PORT` | 端口 | `6379` |
 | `REDIS_DB` | 数据库编号 | `0` |
+| `REDIS_PASSWORD` | Redis 密码 | - |
 | `REDIS_CACHE_TTL` | 缓存过期(秒) | `3600` |
 | `REDIS_SOCKET_TIMEOUT` | Socket 超时 | `5` |
 | `REDIS_CONNECT_TIMEOUT` | 连接超时 | `5` |
@@ -80,6 +100,8 @@ max_limit = 100
 batch_size = 100
 rate_limit_delay = 1.0
 state_flush_interval = 1.0
+state_path = "state.json"
+channels_path = "configs/channels.json"
 ```
 
 | 参数 | 说明 |
@@ -87,6 +109,8 @@ state_flush_interval = 1.0
 | `batch_size` | 批量入库大小 |
 | `rate_limit_delay` | API 调用间隔(秒) |
 | `state_flush_interval` | 状态刷新间隔(秒) |
+| `state_path` | 同步状态文件 |
+| `channels_path` | 频道配置文件 |
 
 ## 频道配置
 
@@ -121,8 +145,13 @@ python -m apps.crawler.channels remove -1001234567890
 `.env` 文件：
 
 ```bash
+APP_ENV=production
 TELEGRAM_API_ID=12345678
 TELEGRAM_API_HASH=your_api_hash_here
 TELEGRAM_BOT_TOKEN=123456:ABC-DEF...
 MEILI_MASTER_KEY=your_master_key
+REDIS_PASSWORD=your_redis_password
+TELEGRAM_SESSION_PATH=/data/telegram/session
+STATE_FILE_PATH=/data/state.json
+CHANNELS_CONFIG_PATH=/data/channels.json
 ```
