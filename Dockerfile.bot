@@ -1,0 +1,34 @@
+FROM python:3.11-slim AS builder
+
+WORKDIR /build
+
+RUN apt-get update && apt-get install -y --no-install-recommends gcc && rm -rf /var/lib/apt/lists/*
+
+COPY README.md pyproject.toml ./
+COPY telegram_search/ telegram_search/
+COPY apps/ apps/
+RUN pip install --no-cache-dir --prefix=/install .
+
+FROM python:3.11-slim
+
+WORKDIR /app
+
+ENV PYTHONUNBUFFERED=1
+
+COPY --from=builder /install /usr/local
+
+RUN groupadd -r appuser && useradd -r -g appuser -d /app -s /sbin/nologin appuser
+
+COPY telegram_search/ telegram_search/
+COPY apps/ apps/
+COPY configs/ configs/
+
+RUN mkdir -p /data /app/configs
+
+RUN chown -R appuser:appuser /app
+USER appuser
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+  CMD python -m telegram_search.health --component bot || exit 1
+
+CMD ["python", "-m", "apps.bot.main"]
