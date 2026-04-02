@@ -16,7 +16,7 @@ from telegram_search.indexer.channel_registry import ChannelRegistry
 from telegram_search.indexer.ingest_service import IngestService, IngestResult
 from telegram_search.indexer.state_store import StateStore
 from telegram_search.pipeline.filters import MessageFilter
-from telegram_search.search.meili_client import MeiliClient
+from telegram_search.runtime import check_writable_path, bootstrap_search_backend, validate_runtime_config
 
 logger = get_logger(__name__)
 
@@ -35,20 +35,18 @@ class Crawler:
 
     async def setup(self) -> None:
         """Initialize all components."""
-        # Validate config
-        if not self.config.telegram.api_id:
-            raise ValueError("TELEGRAM_API_ID not configured")
-        if not self.config.telegram.api_hash:
-            raise ValueError("TELEGRAM_API_HASH not configured")
-        if not self.config.meilisearch.api_key:
-            logger.warning("meili_api_key_missing")
+        validate_runtime_config(self.config, component="crawler")
+        check_writable_path(self.config.telegram.session_path)
+        check_writable_path(self.config.indexer.state_path)
+        check_writable_path(self.config.indexer.channels_path)
 
         # Initialize components
         self.client = TelethonCrawler(self.config.telegram)
-        meili = MeiliClient(self.config.meilisearch)
+        meili = bootstrap_search_backend(self.config)
         self.ingest = IngestService(meili, MessageFilter())
-        self.registry = ChannelRegistry()
+        self.registry = ChannelRegistry(self.config.indexer.channels_path)
         self.state_store = StateStore(
+            file_path=self.config.indexer.state_path,
             flush_interval=self.config.indexer.state_flush_interval
         )
 
@@ -71,6 +69,11 @@ class Crawler:
                 raise RuntimeError("Ingest service not initialized")
             async with self._ingest_lock:
                 result = await asyncio.to_thread(self.ingest.ingest_message, msg)
+            if result != IngestResult.ERROR and self.state_store:
+                chat_id = msg.get("chat_id")
+                msg_id = msg.get("msg_id")
+                if isinstance(chat_id, int) and isinstance(msg_id, int):
+                    self.state_store.set_state(chat_id, msg_id)
             if result == IngestResult.INDEXED:
                 logger.debug("message_indexed", msg_id=msg["msg_id"])
             elif result == IngestResult.SKIPPED:

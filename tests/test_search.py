@@ -40,7 +40,7 @@ class TestMeiliClient:
 
         config = MeilisearchConfig()
         client = MeiliClient(config)
-        
+
         # Test basic search
         result = client.search("test")
         assert "hits" in result
@@ -55,7 +55,7 @@ class TestMeiliClient:
                 {"limit": 20, "offset": 0, "filter": "chat_id=1", "sort": ["date:desc"]},
             ),
         ]
-        
+
     @patch("telegram_search.search.meili_client.meilisearch.Client")
     def test_retry_on_failure(self, mock_client):
         """Test retry logic."""
@@ -65,7 +65,7 @@ class TestMeiliClient:
 
         config = MeilisearchConfig(max_retries=3)
         client = MeiliClient(config)
-        
+
         with patch("time.sleep"):
             result = client.search("test")
 
@@ -81,10 +81,10 @@ class TestMeiliClient:
 
         config = MeilisearchConfig(max_retries=2)
         client = MeiliClient(config)
-        
+
         with patch("time.sleep"), pytest.raises(Exception):
             client.search("test")
-        
+
         assert mock_index.search.call_count == 3
 
 
@@ -117,20 +117,16 @@ class TestSearchService:
         cache_instance = mock_cache.return_value
 
         # Setup mock parser
-        parsed = ParsedQuery(
-            keywords=["keyword"],
-            filters=["date >= 1000"],
-            sort="date:desc"
-        )
+        parsed = ParsedQuery(keywords=["keyword"], filters=["date >= 1000"], sort="date:desc")
         mock_parse.return_value = parsed
-        
+
         # Setup mock cache miss (get_or_compute calls compute_func)
         # We simulate get_or_compute behavior: it returns what compute_func returns
         def side_effect(**kwargs):
-            return kwargs['compute_func']()
-            
+            return kwargs["compute_func"]()
+
         cache_instance.get_or_compute.side_effect = side_effect
-        
+
         # Setup mock meili result
         expected_result = {"hits": [{"id": 1}]}
         meili_instance.search.return_value = expected_result
@@ -143,20 +139,19 @@ class TestSearchService:
 
         # Verify MeiliClient search called with correct params
         meili_instance.search.assert_called_with(
-            "keyword",
-            limit=20,
-            offset=0,
-            filters=["date >= 1000", "chat_id=1"],
-            sort=["date:desc"]
+            "keyword", limit=20, offset=0, filters=["date >= 1000", "chat_id=1"], sort=["date:desc"]
         )
 
         # Verify caching - get_or_compute called
         cache_instance.get_or_compute.assert_called_once()
         _, kwargs = cache_instance.get_or_compute.call_args
-        assert kwargs['query'] == "keyword"
-        assert kwargs['limit'] == 20
-        assert kwargs['offset'] == 0
-        assert kwargs['sort'] == "['date:desc']"
-        assert "['chat_id=1', 'date >= 1000']" in kwargs['filters'] or "['date >= 1000', 'chat_id=1']" in kwargs['filters']
-        
+        assert kwargs["query"] == "keyword"
+        assert kwargs["limit"] == 20
+        assert kwargs["offset"] == 0
+        assert kwargs["sort"] == "date:desc"
+        assert (
+            "['chat_id=1', 'date >= 1000']" in kwargs["filters"]
+            or "['date >= 1000', 'chat_id=1']" in kwargs["filters"]
+        )
+
         assert result == expected_result

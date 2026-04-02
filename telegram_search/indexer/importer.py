@@ -5,25 +5,27 @@ from __future__ import annotations
 import csv
 import json
 from pathlib import Path
-from typing import Iterator
+from typing import Any, Iterator
 
 
-def import_json(path: Path) -> Iterator[dict]:
+def import_json(path: Path) -> Iterator[dict[str, Any]]:
     """Import messages from JSON file."""
     with open(path, "r", encoding="utf-8") as f:
         data = json.load(f)
     if isinstance(data, list):
-        yield from data
+        for item in data:
+            if isinstance(item, dict):
+                yield item
 
 
-def import_csv(path: Path) -> Iterator[dict]:
+def import_csv(path: Path) -> Iterator[dict[str, Any]]:
     """Import messages from CSV file."""
     with open(path, "r", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         yield from reader
 
 
-def import_file(path: Path) -> Iterator[dict]:
+def import_file(path: Path) -> Iterator[dict[str, Any]]:
     """Import from file based on extension."""
     if path.suffix == ".json":
         yield from import_json(path)

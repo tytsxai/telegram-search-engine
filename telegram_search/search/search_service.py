@@ -64,7 +64,7 @@ class SearchService:
         # Prepare cache key components
         # We need a stable string representation for the cache key
         # Sorting filters list to ensure stability
-        cache_filters = f"{sorted(search_filters)}:{search_sort}"
+        cache_filters = f"{sorted(search_filters)}:{','.join(search_sort) if search_sort else ''}"
 
         def compute() -> dict[str, Any]:
             return self._meili.search(
@@ -82,7 +82,7 @@ class SearchService:
                 compute_func=compute,
                 limit=limit_value,
                 offset=offset,
-                sort=str(search_sort), # Convert list to string for cache key
+                sort=",".join(search_sort) if search_sort else "",
                 filters=cache_filters,
             )
 

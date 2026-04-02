@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -23,10 +23,10 @@ class MessageDoc(BaseModel):
     trad: str = Field(default="", description="Traditional Chinese")
     simp: str = Field(default="", description="Simplified Chinese")
     simhash: str = Field(default="", description="Simhash fingerprint")
-    url: Optional[str] = Field(default=None, description="Message URL")
-    media_type: Optional[str] = Field(default=None)
+    url: str | None = Field(default=None, description="Message URL")
+    media_type: str | None = Field(default=None)
 
-    def to_index_dict(self) -> dict:
+    def to_index_dict(self) -> dict[str, Any]:
         """Convert to dictionary for Meilisearch indexing."""
         return {
             "id": self.id,

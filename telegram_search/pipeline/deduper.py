@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from simhash import Simhash
+from simhash import Simhash  # type: ignore[import-untyped]
 
 
 def compute_simhash(text: str) -> str:

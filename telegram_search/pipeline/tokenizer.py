@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import jieba
+import jieba  # type: ignore[import-untyped]
 
 
 def segment(text: str, use_hmm: bool = False) -> list[str]:

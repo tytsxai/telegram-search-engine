@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections import deque
 from enum import Enum
-from typing import Any, Deque, List
+from typing import Any, Deque
 
 import structlog
 
@@ -89,7 +89,7 @@ class IngestService:
 
     def ingest_batch(
         self,
-        msgs_data: List[dict[str, Any]],
+        msgs_data: list[dict[str, Any]],
         *,
         raise_on_error: bool = False,
     ) -> int:
@@ -102,8 +102,8 @@ class IngestService:
         Returns:
             Number of messages successfully indexed.
         """
-        docs_to_index: List[dict[str, Any]] = []
-        batch_hashes: List[str] = []
+        docs_to_index: list[dict[str, Any]] = []
+        batch_hashes: list[str] = []
 
         for msg_data in msgs_data:
             text = msg_data.get("text")
@@ -125,8 +125,7 @@ class IngestService:
 
             # Check duplicates within current batch
             is_batch_dup = any(
-                deduper.is_duplicate(doc.simhash, seen_hash)
-                for seen_hash in batch_hashes
+                deduper.is_duplicate(doc.simhash, seen_hash) for seen_hash in batch_hashes
             )
             if is_batch_dup:
                 logger.debug("duplicate_message_skipped", msg_id=doc.id)

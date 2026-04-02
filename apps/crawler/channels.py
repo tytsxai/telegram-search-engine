@@ -1,10 +1,16 @@
 """Channel management CLI."""
 
 import argparse
-from telegram_search.indexer.channel_registry import ChannelRegistry
+import logging
+
+from telegram_search.config import load_config
+from telegram_search.indexer.channel_registry import Channel, ChannelRegistry
+
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+logger = logging.getLogger(__name__)
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Channel Manager")
     sub = parser.add_subparsers(dest="cmd", required=True)
 
@@ -22,18 +28,20 @@ def main():
     sub.add_parser("list", help="List channels")
 
     args = parser.parse_args()
-    registry = ChannelRegistry()
+    config = load_config()
+    registry = ChannelRegistry(config.indexer.channels_path)
 
     if args.cmd == "add":
         registry.add_channel(args.channel_id, args.username, args.title)
-        print(f"Added: {args.channel_id}")
+        logger.info("Added: %s", args.channel_id)
     elif args.cmd == "remove":
         registry.remove_channel(args.channel_id)
-        print(f"Removed: {args.channel_id}")
+        logger.info("Removed: %s", args.channel_id)
     elif args.cmd == "list":
-        for c in registry.list_channels():
-            status = "✓" if c.enabled else "✗"
-            print(f"[{status}] {c.channel_id} @{c.username} - {c.title}")
+        channels: list[Channel] = registry.list_channels()
+        for c in channels:
+            status = "enabled" if c.enabled else "disabled"
+            logger.info("[%s] %s @%s - %s", status, c.channel_id, c.username, c.title)
 
 
 if __name__ == "__main__":

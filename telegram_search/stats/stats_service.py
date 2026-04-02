@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import redis
-from redis.backoff import ExponentialBackoff
-from redis.exceptions import RedisError, ConnectionError, TimeoutError
-from redis.retry import Retry
+from typing import Any, cast
 
+from redis.exceptions import RedisError
+
+from telegram_search.cache.redis_factory import create_redis_client
 from telegram_search.config import RedisConfig
 from telegram_search.logging import get_logger, safe_error
 
@@ -18,20 +18,7 @@ class StatsService:
 
     def __init__(self, config: RedisConfig) -> None:
         """Initialize Redis connection."""
-        retry_strategy = Retry(
-            ExponentialBackoff(),
-            config.max_retries,
-        )
-        self._client = redis.Redis(
-            host=config.host,
-            port=config.port,
-            db=config.db,
-            decode_responses=True,
-            socket_timeout=config.socket_timeout,
-            socket_connect_timeout=config.socket_connect_timeout,
-            retry=retry_strategy,
-            retry_on_error=[ConnectionError, TimeoutError],
-        )
+        self._client: Any = create_redis_client(config)
         self._key_prefix = "stats"
 
     def record_search(self, query: str) -> None:
@@ -40,11 +27,7 @@ class StatsService:
             return
 
         try:
-            # Increment total searches
             self._client.incr(f"{self._key_prefix}:total_searches")
-
-            # Increment keyword frequency
-            # Use lower case for normalization
             normalized_query = query.strip().lower()
             if normalized_query:
                 self._client.zincrby(
@@ -55,24 +38,19 @@ class StatsService:
         except RedisError as e:
             logger.warning("stats_record_failed", **safe_error(e))
 
-    def get_stats(self, top_k: int = 10) -> dict:
-        """Get current statistics.
-        
-        Returns:
-            dict: {
-                "total_searches": int,
-                "top_keywords": list[tuple[str, float]]
-            }
-        """
+    def get_stats(self, top_k: int = 10) -> dict[str, Any]:
+        """Get current statistics."""
         try:
-            total = self._client.get(f"{self._key_prefix}:total_searches")
-            keywords = self._client.zrevrange(
+            total = cast(str | None, self._client.get(f"{self._key_prefix}:total_searches"))
+            keywords = cast(
+                list[tuple[str, float]],
+                self._client.zrevrange(
                 f"{self._key_prefix}:keywords",
                 0,
                 top_k - 1,
                 withscores=True,
+                ),
             )
-
             return {
                 "total_searches": int(total) if total else 0,
                 "top_keywords": keywords,

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import AsyncIterator, Callable, Optional
+from typing import Any, AsyncIterator, Callable
 
 from telegram_search.indexer.state_store import StateStore
 from telegram_search.indexer.telethon_client import TelethonCrawler
@@ -33,8 +33,8 @@ class HistoricalSync:
         self,
         channel_id: str | int,
         limit: int = 100,
-        progress_callback: Optional[Callable[[int], None]] = None,
-    ) -> AsyncIterator[dict]:
+        progress_callback: Callable[[int], None] | None = None,
+    ) -> AsyncIterator[dict[str, Any]]:
         """Sync messages from channel incrementally.
 
         Fetches messages starting from the last known message ID (min_id).

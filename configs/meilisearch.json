@@ -10,6 +10,7 @@
   "filterableAttributes": [
     "chat_id",
     "chat_title",
+    "chat_username",
     "date",
     "media_type"
   ],

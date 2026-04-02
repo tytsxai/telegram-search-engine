@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import sys
-from typing import Any
+from typing import Any, cast
 
 import structlog
 
@@ -39,7 +39,7 @@ def setup_logging(debug: bool = False) -> None:
 
 def get_logger(name: str) -> structlog.BoundLogger:
     """Get a logger instance."""
-    return structlog.get_logger(name)
+    return cast(structlog.BoundLogger, structlog.get_logger(name))
 
 
 def safe_error(err: Exception) -> dict[str, Any]:

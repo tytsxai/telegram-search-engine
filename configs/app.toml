@@ -1,21 +1,25 @@
 [app]
 name = "telegram-search-engine"
 debug = false
+environment = "development"
 
 [telegram]
 bot_token = ""
 api_id = 0
 api_hash = ""
+session_path = "session"
 
 [meilisearch]
 host = "http://localhost:7700"
 api_key = ""
 index_name = "telegram_messages"
+settings_path = "configs/meilisearch.json"
 
 [redis]
 host = "localhost"
 port = 6379
 db = 0
+password = ""
 cache_ttl = 3600
 
 [search]
@@ -26,3 +30,5 @@ max_limit = 100
 batch_size = 100
 rate_limit_delay = 1.0
 state_flush_interval = 1.0
+state_path = "state.json"
+channels_path = "configs/channels.json"

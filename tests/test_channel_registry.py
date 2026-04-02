@@ -128,7 +128,17 @@ def test_registry_invalid_channel_id(temp_config_path):
         registry.add_channel(0, "chan0", "Invalid")
 
     with pytest.raises(ValueError):
-        registry.remove_channel(-1)
+        registry.remove_channel(0)
 
     with pytest.raises(ValueError):
         registry.get_channel(0)
+
+
+def test_registry_accepts_negative_channel_id(temp_config_path):
+    """Telegram channel IDs are commonly negative and must be accepted."""
+    registry = ChannelRegistry(config_path=temp_config_path)
+
+    channel = registry.add_channel(-1001234567890, "chan1", "Channel 1")
+
+    assert channel.channel_id == -1001234567890
+    assert registry.get_channel(-1001234567890) is not None

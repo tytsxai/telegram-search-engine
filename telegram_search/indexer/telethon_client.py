@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import asyncio
+from pathlib import Path
 from typing import Any, AsyncIterator, Callable, TypeVar
 
-from telethon import TelegramClient
-from telethon.errors import FloodWaitError
-from telethon.tl.types import Message
+from telethon import TelegramClient  # type: ignore[import-untyped]
+from telethon.errors import FloodWaitError  # type: ignore[import-untyped]
+from telethon.tl.types import Message  # type: ignore[import-untyped]
 
 from telegram_search.config import TelegramConfig
 from telegram_search.logging import get_logger, safe_error
@@ -24,14 +25,17 @@ class TelethonCrawler:
         """Initialize Telethon client."""
         self._config = config
         self._client: TelegramClient | None = None
+        self._session_path = Path(config.session_path)
 
     async def connect(self) -> None:
         """Connect to Telegram."""
         if self._client:
             return
 
+        self._session_path.parent.mkdir(parents=True, exist_ok=True)
+
         self._client = TelegramClient(
-            "session",
+            str(self._session_path),
             self._config.api_id,
             self._config.api_hash,
         )
@@ -70,7 +74,7 @@ class TelethonCrawler:
         limit: int = 100,
         min_id: int = 0,
         reverse: bool = False,
-    ) -> AsyncIterator[dict]:
+    ) -> AsyncIterator[dict[str, Any]]:
         """Fetch messages from channel."""
         if not self._client:
             raise RuntimeError("Client not connected")

@@ -20,6 +20,7 @@ class TestTelegramConfig:
         assert config.bot_token == ""
         assert config.api_id == 0
         assert config.api_hash == ""
+        assert config.session_path == "session"
 
     def test_env_override(self, monkeypatch):
         """Test environment variable override."""
@@ -37,6 +38,7 @@ class TestMeilisearchConfig:
         assert config.host == "http://localhost:7700"
         assert config.api_key == ""
         assert config.index_name == "telegram_messages"
+        assert config.settings_path == "configs/meilisearch.json"
 
     def test_env_override(self, monkeypatch):
         """Test environment variable override."""
@@ -54,6 +56,7 @@ class TestRedisConfig:
         assert config.host == "localhost"
         assert config.port == 6379
         assert config.db == 0
+        assert config.password == ""
         assert config.cache_ttl == 3600
 
 
@@ -65,6 +68,7 @@ class TestAppConfig:
         config = AppConfig()
         assert config.name == "telegram-search-engine"
         assert config.debug is False
+        assert config.environment == "development"
         assert config.indexer.state_flush_interval == 1.0
 
     def test_from_toml(self, tmp_path):
@@ -73,6 +77,7 @@ class TestAppConfig:
 [app]
 name = "test-app"
 debug = true
+environment = "production"
 
 [meilisearch]
 host = "http://test:7700"
@@ -83,6 +88,7 @@ host = "http://test:7700"
         config = AppConfig.from_toml(toml_file)
         assert config.name == "test-app"
         assert config.debug is True
+        assert config.environment == "production"
         assert config.meilisearch.host == "http://test:7700"
 
 

@@ -48,4 +48,4 @@ python_version = "3.11"
 strict = true
 
 [tool.setuptools.packages.find]
-include = ["telegram_search*"]
+include = ["telegram_search*", "apps*"]

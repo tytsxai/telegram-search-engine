@@ -6,7 +6,10 @@ import json
 import os
 import time
 from pathlib import Path
-from typing import Any
+
+from telegram_search.logging import get_logger, safe_error
+
+logger = get_logger(__name__)
 
 
 class StateStore:
@@ -25,7 +28,7 @@ class StateStore:
         """
         self.file_path = Path(file_path)
         self.flush_interval = max(flush_interval, 0.0)
-        self._state: dict[str, Any] = {}
+        self._state: dict[str, dict[str, int]] = {}
         self._dirty = False
         self._last_flush = 0.0
         self._load()
@@ -35,15 +38,29 @@ class StateStore:
         if self.file_path.exists():
             try:
                 with open(self.file_path, "r", encoding="utf-8") as f:
-                    self._state = json.load(f)
-            except json.JSONDecodeError:
+                    raw_data = json.load(f)
+                if not isinstance(raw_data, dict):
+                    raise ValueError("state file must contain a JSON object")
+
+                self._state = {}
+                for key, value in raw_data.items():
+                    if not isinstance(key, str) or not isinstance(value, dict):
+                        continue
+                    last_msg_id = value.get("last_msg_id", 0)
+                    if isinstance(last_msg_id, int):
+                        self._state[key] = {"last_msg_id": last_msg_id}
+            except (json.JSONDecodeError, ValueError):
                 self._state = {}
                 # Preserve corrupted file for inspection
                 corrupt_path = self.file_path.with_suffix(self.file_path.suffix + ".corrupt")
                 try:
                     os.replace(self.file_path, corrupt_path)
+                    logger.warning("state_store_corrupt_file_preserved", path=str(corrupt_path))
                 except OSError:
-                    pass
+                    logger.warning("state_store_corrupt_file_replace_failed", path=str(self.file_path))
+            except OSError as e:
+                self._state = {}
+                logger.warning("state_store_load_failed", path=str(self.file_path), **safe_error(e))
         else:
             self._state = {}
         self._last_flush = time.monotonic()
@@ -71,7 +88,10 @@ class StateStore:
             Last message ID or 0 if not found.
         """
         key = str(channel_id)
-        return self._state.get(key, {}).get("last_msg_id", 0)
+        entry = self._state.get(key)
+        if entry is None:
+            return 0
+        return entry.get("last_msg_id", 0)
 
     def set_state(self, channel_id: str | int, msg_id: int) -> None:
         """Set last synchronized message ID for a channel.
@@ -83,7 +103,7 @@ class StateStore:
         key = str(channel_id)
         if key not in self._state:
             self._state[key] = {}
-        
+
         # Only update if new ID is greater than existing
         current_id = self._state[key].get("last_msg_id", 0)
         if msg_id > current_id:

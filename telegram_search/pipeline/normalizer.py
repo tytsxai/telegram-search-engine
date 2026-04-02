@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from typing import cast
 
-from opencc import OpenCC
+from opencc import OpenCC  # type: ignore[import-untyped]
 from pypinyin import lazy_pinyin, Style
 
 
@@ -26,12 +27,12 @@ def normalize_whitespace(text: str) -> str:
 
 def to_simplified(text: str) -> str:
     """Convert Traditional Chinese to Simplified."""
-    return _t2s.convert(text)
+    return cast(str, _t2s.convert(text))
 
 
 def to_traditional(text: str) -> str:
     """Convert Simplified Chinese to Traditional."""
-    return _s2t.convert(text)
+    return cast(str, _s2t.convert(text))
 
 
 def to_pinyin(text: str) -> str:

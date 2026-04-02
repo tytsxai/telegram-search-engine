@@ -18,6 +18,7 @@ class TelegramConfig(BaseSettings):
     bot_token: str = Field(default="", alias="TELEGRAM_BOT_TOKEN")
     api_id: int = Field(default=0, alias="TELEGRAM_API_ID")
     api_hash: str = Field(default="", alias="TELEGRAM_API_HASH")
+    session_path: str = Field(default="session", alias="TELEGRAM_SESSION_PATH")
 
 
 class MeilisearchConfig(BaseSettings):
@@ -30,6 +31,7 @@ class MeilisearchConfig(BaseSettings):
     index_name: str = Field(default="telegram_messages", alias="MEILI_INDEX")
     timeout: int = Field(default=5, alias="MEILI_TIMEOUT")
     max_retries: int = Field(default=3, alias="MEILI_MAX_RETRIES")
+    settings_path: str = Field(default="configs/meilisearch.json", alias="MEILI_SETTINGS_PATH")
 
 
 class RedisConfig(BaseSettings):
@@ -40,6 +42,7 @@ class RedisConfig(BaseSettings):
     host: str = Field(default="localhost", alias="REDIS_HOST")
     port: int = Field(default=6379, alias="REDIS_PORT")
     db: int = Field(default=0, alias="REDIS_DB")
+    password: str = Field(default="", alias="REDIS_PASSWORD")
     cache_ttl: int = Field(default=3600, alias="REDIS_CACHE_TTL")
     socket_timeout: int = Field(default=5, alias="REDIS_SOCKET_TIMEOUT")
     socket_connect_timeout: int = Field(default=5, alias="REDIS_CONNECT_TIMEOUT")
@@ -63,6 +66,8 @@ class IndexerConfig(BaseSettings):
     batch_size: int = Field(default=100)
     rate_limit_delay: float = Field(default=1.0)
     state_flush_interval: float = Field(default=1.0, alias="STATE_FLUSH_INTERVAL")
+    state_path: str = Field(default="state.json", alias="STATE_FILE_PATH")
+    channels_path: str = Field(default="configs/channels.json", alias="CHANNELS_CONFIG_PATH")
 
 
 class AppConfig(BaseSettings):
@@ -72,6 +77,7 @@ class AppConfig(BaseSettings):
 
     name: str = Field(default="telegram-search-engine")
     debug: bool = Field(default=False, validation_alias="DEBUG")
+    environment: str = Field(default="development", alias="APP_ENV")
 
     telegram: TelegramConfig = Field(default_factory=TelegramConfig)
     meilisearch: MeilisearchConfig = Field(default_factory=MeilisearchConfig)
@@ -96,6 +102,7 @@ class AppConfig(BaseSettings):
         return cls(
             name=app_data.get("name", "telegram-search-engine"),
             debug=app_data.get("debug", False),
+            APP_ENV=app_data.get("environment", "development"),
             telegram=TelegramConfig(**data.get("telegram", {})),
             meilisearch=MeilisearchConfig(**data.get("meilisearch", {})),
             redis=RedisConfig(**data.get("redis", {})),

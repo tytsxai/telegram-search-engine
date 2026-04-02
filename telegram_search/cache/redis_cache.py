@@ -4,13 +4,11 @@ from __future__ import annotations
 
 import hashlib
 import json
-from typing import Any, Callable
+from typing import Any, Callable, cast
 
-import redis
-from redis.backoff import ExponentialBackoff
-from redis.exceptions import ConnectionError, RedisError, TimeoutError
-from redis.retry import Retry
+from redis.exceptions import RedisError
 
+from telegram_search.cache.redis_factory import create_redis_client
 from telegram_search.config import RedisConfig
 from telegram_search.logging import get_logger, safe_error
 
@@ -22,20 +20,7 @@ class RedisCache:
 
     def __init__(self, config: RedisConfig) -> None:
         """Initialize Redis connection."""
-        retry_strategy = Retry(
-            ExponentialBackoff(),
-            config.max_retries,
-        )
-        self._client = redis.Redis(
-            host=config.host,
-            port=config.port,
-            db=config.db,
-            decode_responses=True,
-            socket_timeout=config.socket_timeout,
-            socket_connect_timeout=config.socket_connect_timeout,
-            retry=retry_strategy,
-            retry_on_error=[ConnectionError, TimeoutError],
-        )
+        self._client: Any = create_redis_client(config)
         self._ttl = config.cache_ttl
 
     @staticmethod
@@ -46,13 +31,15 @@ class RedisCache:
         key_data = f"{query}:{items}"
         return f"search:{hashlib.md5(key_data.encode()).hexdigest()}"
 
-    def get(self, query: str, **kwargs: Any) -> dict | None:
+    def get(self, query: str, **kwargs: Any) -> dict[str, Any] | None:
         """Get cached result."""
         try:
             key = self._make_key(query, **kwargs)
-            data = self._client.get(key)
+            data = cast(str | None, self._client.get(key))
             if data:
-                return json.loads(data)
+                loaded = json.loads(data)
+                if isinstance(loaded, dict):
+                    return cast(dict[str, Any], loaded)
         except RedisError as e:
             logger.warning("redis_get_failed", **safe_error(e))
         except Exception as e:
@@ -62,7 +49,7 @@ class RedisCache:
     def set(
         self,
         query: str,
-        result: dict,
+        result: dict[str, Any],
         **kwargs: Any,
     ) -> None:
         """Cache search result."""
@@ -77,9 +64,9 @@ class RedisCache:
     def get_or_compute(
         self,
         query: str,
-        compute_func: Callable[[], dict],
+        compute_func: Callable[[], dict[str, Any]],
         **kwargs: Any,
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Get from cache or compute and cache."""
         cached = self.get(query, **kwargs)
         if cached is not None:  # Explicit None check to handle empty dict {} as valid cache hit
@@ -89,10 +76,8 @@ class RedisCache:
             result = compute_func()
             self.set(query, result, **kwargs)
             return result
-        except Exception as e:
-            # If compute fails, we propagate the error
-            # If set fails, it's caught inside set()
-            raise e
+        except Exception:
+            raise
 
     def close(self) -> None:
         """Close Redis connection."""

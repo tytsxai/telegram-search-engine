@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Awaitable, Callable, List, Union
+from typing import Any, Awaitable, Callable
 
-from telethon import events
-from telethon.tl.types import Message
+from telethon import events  # type: ignore[import-untyped]
+from telethon.tl.types import Message  # type: ignore[import-untyped]
 
 from telegram_search.indexer.telethon_client import TelethonCrawler
 from telegram_search.logging import get_logger, safe_error
@@ -31,9 +31,9 @@ class RealtimeListener:
         """
         self._client = client
         self._callback = callback
-        self._channels: List[Union[str, int]] = []
+        self._channels: list[str | int] = []
 
-    async def start(self, channels: List[Union[str, int]]) -> None:
+    async def start(self, channels: list[str | int]) -> None:
         """Start listening to specified channels.
 
         Args:
