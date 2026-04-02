@@ -97,6 +97,9 @@ docker compose up -d
 ```bash
 cp .env.example .env
 # 编辑 .env 填入你的 API 凭证
+
+# 生产环境可直接从模板生成
+cp .env.production.example .env.production
 ```
 
 ### 4. 安装依赖
@@ -197,8 +200,7 @@ pytest
 ### 代码检查
 
 ```bash
-ruff check .
-mypy telegram_search
+make quality
 ```
 
 ## 注意事项
@@ -212,7 +214,9 @@ mypy telegram_search
 
 - 使用 `docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d`
 - 生产环境必须设置 `APP_ENV=production`、`MEILI_MASTER_KEY`、`REDIS_PASSWORD`
+- `crawler` 容器默认以 `--mode both` 启动，先补历史缺口再进入实时监听
 - 采集器需持久化 `/data`，保存 `state.json`、`channels.json` 与 Telethon session
+- 上线前建议先执行 `make health-bot`、`make health-crawler`
 - 详细步骤见 [docs/deployment.md](docs/deployment.md) 和 [docs/operations.md](docs/operations.md)
 
 ## License

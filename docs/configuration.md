@@ -142,7 +142,7 @@ python -m apps.crawler.channels remove -1001234567890
 
 ## 完整示例
 
-`.env` 文件：
+`.env.production` 文件：
 
 ```bash
 APP_ENV=production
@@ -154,4 +154,10 @@ REDIS_PASSWORD=your_redis_password
 TELEGRAM_SESSION_PATH=/data/telegram/session
 STATE_FILE_PATH=/data/state.json
 CHANNELS_CONFIG_PATH=/data/channels.json
+```
+
+推荐从仓库模板复制：
+
+```bash
+cp .env.production.example .env.production
 ```

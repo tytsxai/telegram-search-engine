@@ -17,6 +17,12 @@
 - 已为 crawler 预留持久化目录 `/data`
 - 已获取 Telegram API ID / Hash 与 Bot Token
 
+推荐直接从模板生成：
+
+```bash
+cp .env.production.example .env.production
+```
+
 ## 必填环境变量
 
 最少需要：
@@ -74,6 +80,11 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml run --rm crawler
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
 
+说明：
+
+- `crawler` 镜像默认使用 `python -m apps.crawler.main --mode both`
+- 这会先按 `state.json` 做增量历史补齐，再进入实时监听，避免重启窗口丢消息
+
 ## 健康检查
 
 容器内已内置健康检查：
@@ -93,6 +104,7 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml logs -f bot craw
 ## 启动后确认项
 
 - `crawler` 日志出现 `crawler_initialized`
+- `crawler` 日志先出现 `syncing_channel` 或 `channel_synced`，随后进入 `starting_realtime`
 - `bot` 日志出现 `bot_starting`
 - `healthcheck_ok` 周期性通过
 - Meilisearch 索引已存在且已应用 `configs/meilisearch.json`

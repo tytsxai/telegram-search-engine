@@ -82,7 +82,8 @@ Redis 丢失不会导致核心搜索数据丢失，但会丢：
 3. 执行 `python -m telegram_search.health --component crawler`。
 4. 手工验证 `/search`。
 5. 确认 crawler 可读取已有 session 与 state。
-6. 再滚动替换生产实例。
+6. 确认 crawler 重启后会先补齐停机期间缺口，再恢复实时监听。
+7. 再滚动替换生产实例。
 
 ## 回滚
 
