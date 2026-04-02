@@ -17,7 +17,7 @@ ENV PYTHONUNBUFFERED=1
 
 COPY --from=builder /install /usr/local
 
-RUN groupadd -r appuser && useradd -r -g appuser -d /app -s /sbin/nologin appuser
+RUN groupadd -r appuser && useradd -r -g appuser -d /app -s /usr/sbin/nologin appuser
 
 COPY telegram_search/ telegram_search/
 COPY apps/ apps/
