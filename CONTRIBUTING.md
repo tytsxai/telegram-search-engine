@@ -22,10 +22,11 @@
 ### 提交代码
 
 1. Fork 本仓库
-2. 创建功能分支：`git checkout -b feature/your-feature`
-3. 提交更改：`git commit -m "feat: add your feature"`
-4. 推送分支：`git push origin feature/your-feature`
-5. 创建 Pull Request
+2. 基于 `main` 直接提交更改：`git commit -m "feat: add your feature"`
+3. 推送到你的 `main`：`git push origin main`
+4. 创建 Pull Request 到上游 `main`
+
+项目默认只维护一个主分支：`main`。不要额外创建 `develop`、`release` 或 `feature/*` 分支。
 
 ## 开发环境
 
