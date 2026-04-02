@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -21,8 +22,7 @@ def _make_message(msg_id: int, chat_id: int = 100, text: str = "hello") -> Messa
         date=datetime(2024, 1, 1, tzinfo=timezone.utc),
     )
     msg._text = text
-    return msg
-    msg._text = text
+    msg._chat = SimpleNamespace(title="Test Channel", username="testchannel")
     return msg
 
 
@@ -127,8 +127,7 @@ class TestFetchMessages:
             date=datetime(2024, 1, 1, tzinfo=timezone.utc),
         )
         msg._text = text
-        return msg
-        msg._text = text
+        msg._chat = SimpleNamespace(title="Test Channel", username="testchannel")
         return msg
 
     @pytest.mark.asyncio
@@ -159,6 +158,8 @@ class TestFetchMessages:
         assert results[0]["msg_id"] == 1
         assert results[0]["text"] == "first"
         assert results[0]["chat_id"] == -1000000000100
+        assert results[0]["chat_title"] == "Test Channel"
+        assert results[0]["chat_username"] == "testchannel"
         assert results[1]["msg_id"] == 2
         assert results[1]["text"] == "second"
 

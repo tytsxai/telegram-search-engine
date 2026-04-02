@@ -8,7 +8,7 @@ from typing import Any, Awaitable, Callable
 from telethon import events  # type: ignore[import-untyped]
 from telethon.tl.types import Message  # type: ignore[import-untyped]
 
-from telegram_search.indexer.telethon_client import TelethonCrawler
+from telegram_search.indexer.telethon_client import TelethonCrawler, build_message_payload
 from telegram_search.logging import get_logger, safe_error
 
 logger = get_logger(__name__)
@@ -55,12 +55,7 @@ class RealtimeListener:
         try:
             msg = event.message
             if isinstance(msg, Message) and msg.text:
-                data = {
-                    "chat_id": msg.chat_id,
-                    "msg_id": msg.id,
-                    "text": msg.text,
-                    "date": msg.date,
-                }
+                data = build_message_payload(msg)
                 logger.debug("realtime_message_received", chat_id=msg.chat_id, msg_id=msg.id)
 
                 result = self._callback(data)

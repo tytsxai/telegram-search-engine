@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import dataclass
+from typing import Any
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.helpers import escape_markdown
@@ -98,7 +99,7 @@ async def do_search(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             return
 
         response = format_results(hits)
-        keyboard = build_pagination_keyboard(page, len(hits))
+        keyboard = build_pagination_keyboard(result, page)
 
         if update.callback_query:
             await update.callback_query.edit_message_text(
@@ -115,7 +116,7 @@ async def do_search(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             await update.message.reply_text(text)
 
 
-def format_results(hits: list[dict]) -> str:
+def format_results(hits: list[dict[str, Any]]) -> str:
     """Format search results for Telegram."""
     lines = []
     for hit in hits[:PAGE_SIZE]:
@@ -129,12 +130,28 @@ def format_results(hits: list[dict]) -> str:
     return "\n".join(lines)
 
 
-def build_pagination_keyboard(page: int, hits_count: int) -> InlineKeyboardMarkup:
+def _result_total_hits(result: dict[str, Any]) -> int:
+    """Read total hits from Meilisearch-compatible result metadata."""
+    for key in ("estimatedTotalHits", "totalHits", "nbHits"):
+        value = result.get(key)
+        if isinstance(value, int) and value >= 0:
+            return value
+    hits = result.get("hits", [])
+    return len(hits) if isinstance(hits, list) else 0
+
+
+def build_pagination_keyboard(
+    result: dict[str, Any],
+    page: int,
+) -> InlineKeyboardMarkup | None:
     """Build pagination keyboard."""
+    hits = result.get("hits", [])
+    hits_count = len(hits) if isinstance(hits, list) else 0
+    has_next_page = (page * PAGE_SIZE) + hits_count < _result_total_hits(result)
     buttons = []
     if page > 0:
         buttons.append(InlineKeyboardButton("⬅️ 上一页", callback_data="prev"))
-    if hits_count >= PAGE_SIZE:
+    if has_next_page:
         buttons.append(InlineKeyboardButton("下一页 ➡️", callback_data="next"))
     return InlineKeyboardMarkup([buttons]) if buttons else None
 

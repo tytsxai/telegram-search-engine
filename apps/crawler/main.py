@@ -16,7 +16,12 @@ from telegram_search.indexer.channel_registry import ChannelRegistry
 from telegram_search.indexer.ingest_service import IngestService, IngestResult
 from telegram_search.indexer.state_store import StateStore
 from telegram_search.pipeline.filters import MessageFilter
-from telegram_search.runtime import check_writable_path, bootstrap_search_backend, validate_runtime_config
+from telegram_search.runtime import (
+    bootstrap_search_backend,
+    check_writable_path,
+    validate_channels_config,
+    validate_runtime_config,
+)
 
 logger = get_logger(__name__)
 
@@ -39,6 +44,7 @@ class Crawler:
         check_writable_path(self.config.telegram.session_path)
         check_writable_path(self.config.indexer.state_path)
         check_writable_path(self.config.indexer.channels_path)
+        validate_channels_config(self.config.indexer.channels_path)
 
         # Initialize components
         self.client = TelethonCrawler(self.config.telegram)

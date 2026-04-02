@@ -1,4 +1,4 @@
-.PHONY: install lint type-check test test-cov run-crawler run-bot build clean
+.PHONY: install lint type-check test test-cov quality health-bot health-crawler run-crawler run-bot build clean
 
 PYTHON ?= python3
 PIP ?= $(PYTHON) -m pip
@@ -21,6 +21,17 @@ test:
 
 test-cov:
 	$(PYTEST) --cov=telegram_search --cov-report=html
+
+quality:
+	$(MAKE) lint
+	$(MAKE) type-check
+	$(MAKE) test
+
+health-bot:
+	$(PYTHON) -m telegram_search.health --component bot
+
+health-crawler:
+	$(PYTHON) -m telegram_search.health --component crawler
 
 run-crawler:
 	$(PYTHON) -m apps.crawler.main

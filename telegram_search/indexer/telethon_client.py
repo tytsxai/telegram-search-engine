@@ -18,6 +18,22 @@ T = TypeVar("T")
 logger = get_logger(__name__)
 
 
+def build_message_payload(msg: Message) -> dict[str, Any]:
+    """Normalize a Telethon message into the internal ingest payload."""
+    chat = getattr(msg, "chat", None)
+    chat_title = getattr(chat, "title", "") or ""
+    chat_username = getattr(chat, "username", "") or ""
+
+    return {
+        "chat_id": msg.chat_id,
+        "chat_title": chat_title,
+        "chat_username": chat_username,
+        "msg_id": msg.id,
+        "text": msg.text or "",
+        "date": msg.date,
+    }
+
+
 class TelethonCrawler:
     """Crawler for Telegram channels."""
 
@@ -102,12 +118,7 @@ class TelethonCrawler:
                     if isinstance(msg, Message):
                         last_id = msg.id
                         fetched += 1
-                        yield {
-                            "chat_id": msg.chat_id,
-                            "msg_id": msg.id,
-                            "text": msg.text or "",
-                            "date": msg.date,
-                        }
+                        yield build_message_payload(msg)
                 break
             except FloodWaitError as e:
                 wait_for = max(int(e.seconds), 1)

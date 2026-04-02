@@ -1,5 +1,6 @@
 """Tests for realtime listener."""
 
+from types import SimpleNamespace
 import pytest
 from unittest.mock import Mock, AsyncMock, patch, MagicMock
 from datetime import datetime
@@ -121,6 +122,7 @@ class TestRealtimeListener:
         message.chat_id = 123
         message.id = 1
         message.date = datetime.now()
+        message.chat = SimpleNamespace(title="Test Channel", username="testchannel")
         event.message = message
         
         await listener._handle_new_message(event)
@@ -130,6 +132,8 @@ class TestRealtimeListener:
         assert call_args["text"] == "Hello"
         assert call_args["chat_id"] == 123
         assert call_args["msg_id"] == 1
+        assert call_args["chat_title"] == "Test Channel"
+        assert call_args["chat_username"] == "testchannel"
 
     @pytest.mark.asyncio
     async def test_handle_new_message_sync(self, mock_config):
@@ -145,6 +149,7 @@ class TestRealtimeListener:
         message.chat_id = 123
         message.id = 1
         message.date = datetime.now()
+        message.chat = SimpleNamespace(title="Test Channel", username="testchannel")
         event.message = message
         
         await listener._handle_new_message(event)
@@ -152,6 +157,7 @@ class TestRealtimeListener:
         callback.assert_called_once()
         call_args = callback.call_args[0][0]
         assert call_args["text"] == "Hello"
+        assert call_args["chat_title"] == "Test Channel"
 
     @pytest.mark.asyncio
     async def test_handle_new_message_exception(self, mock_config):
@@ -167,6 +173,7 @@ class TestRealtimeListener:
         message.chat_id = 123
         message.id = 1
         message.date = datetime.now()
+        message.chat = SimpleNamespace(title="Test Channel", username="testchannel")
         event.message = message
         
         # Should not raise exception, but log it

@@ -53,6 +53,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.crawler
+    init: true
     env_file:
       - .env.production
     environment:
@@ -62,6 +63,7 @@ services:
       - CHANNELS_CONFIG_PATH=/data/channels.json
     volumes:
       - crawler_data:/data
+    stop_grace_period: 60s
     deploy:
       resources:
         limits:
@@ -85,6 +87,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.bot
+    init: true
     env_file:
       - .env.production
     environment:
@@ -97,6 +100,7 @@ services:
         reservations:
           cpus: "0.1"
           memory: 128M
+    stop_grace_period: 30s
     healthcheck:
       test: ["CMD", "python", "-m", "telegram_search.health", "--component", "bot"]
       interval: 60s

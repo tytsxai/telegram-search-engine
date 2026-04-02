@@ -11,6 +11,7 @@ from redis.exceptions import RedisError
 
 from telegram_search.cache.redis_factory import create_redis_client
 from telegram_search.config import AppConfig
+from telegram_search.indexer.channel_registry import ChannelRegistry
 from telegram_search.logging import get_logger, safe_error
 from telegram_search.search.meili_client import MeiliClient
 
@@ -72,6 +73,20 @@ def bootstrap_search_backend(config: AppConfig) -> MeiliClient:
     settings = load_meili_settings(config.meilisearch.settings_path)
     client.ensure_index(settings)
     return client
+
+
+def validate_channels_config(path: str | Path) -> None:
+    """Validate that at least one enabled channel is configured."""
+    registry = ChannelRegistry(path)
+    channels = registry.list_channels()
+    if not channels:
+        raise ValueError(
+            f"No channels configured in {path}. Add at least one channel before starting the crawler."
+        )
+    if not any(channel.enabled for channel in channels):
+        raise ValueError(
+            f"No enabled channels configured in {path}. Enable at least one channel before starting the crawler."
+        )
 
 
 def check_writable_path(path: str | Path) -> None:

@@ -9,6 +9,7 @@ from telegram_search.config import load_config
 from telegram_search.logging import get_logger, safe_error, setup_logging
 from telegram_search.runtime import (
     check_optional_redis,
+    validate_channels_config,
     check_writable_path,
     create_search_backend,
     validate_runtime_config,
@@ -28,6 +29,7 @@ def run_healthcheck(component: str) -> int:
         if component == "bot":
             check_optional_redis(config)
         if component == "crawler":
+            validate_channels_config(config.indexer.channels_path)
             check_writable_path(config.telegram.session_path)
             check_writable_path(config.indexer.state_path)
             check_writable_path(config.indexer.channels_path)

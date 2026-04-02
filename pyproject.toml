@@ -37,7 +37,7 @@ dev = [
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
-addopts = "-v --cov=telegram_search --cov-report=term-missing"
+addopts = "-v --cov=telegram_search --cov-report=term-missing --cov-fail-under=80"
 
 [tool.ruff]
 line-length = 100

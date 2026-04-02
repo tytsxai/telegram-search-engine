@@ -7,7 +7,12 @@ import json
 import pytest
 
 from telegram_search.config import AppConfig
-from telegram_search.runtime import check_writable_path, load_meili_settings, validate_runtime_config
+from telegram_search.runtime import (
+    check_writable_path,
+    load_meili_settings,
+    validate_channels_config,
+    validate_runtime_config,
+)
 
 
 def test_load_meili_settings(tmp_path) -> None:
@@ -42,3 +47,31 @@ def test_validate_runtime_config_for_crawler_requires_api_credentials() -> None:
 
     with pytest.raises(ValueError, match="TELEGRAM_API_ID"):
         validate_runtime_config(config, component="crawler")
+
+
+def test_validate_channels_config_requires_at_least_one_channel(tmp_path) -> None:
+    path = tmp_path / "channels.json"
+    path.write_text("[]", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="No channels configured"):
+        validate_channels_config(path)
+
+
+def test_validate_channels_config_requires_enabled_channel(tmp_path) -> None:
+    path = tmp_path / "channels.json"
+    path.write_text(
+        json.dumps(
+            [
+                {
+                    "channel_id": -1001,
+                    "username": "disabled",
+                    "title": "Disabled",
+                    "enabled": False,
+                }
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="No enabled channels"):
+        validate_channels_config(path)

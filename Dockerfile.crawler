@@ -17,7 +17,7 @@ ENV PYTHONUNBUFFERED=1
 
 COPY --from=builder /install /usr/local
 
-RUN groupadd -r appuser && useradd -r -g appuser -d /app -s /sbin/nologin appuser
+RUN groupadd -r appuser && useradd -r -g appuser -d /app -s /usr/sbin/nologin appuser
 
 COPY telegram_search/ telegram_search/
 COPY apps/ apps/
@@ -31,4 +31,4 @@ USER appuser
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
   CMD python -m telegram_search.health --component crawler || exit 1
 
-CMD ["python", "-m", "apps.crawler.main"]
+CMD ["python", "-m", "apps.crawler.main", "--mode", "both"]
