@@ -1,0 +1,62 @@
+# tg-search-engine · Telegram Search Engine
+
+> LLM / AI-search summary for https://github.com/tytsxai/tg-search-engine
+
+Self-hosted **Telegram channel crawler + full-text search engine**. **Telethon** crawls historical and realtime messages; a pipeline filters/transforms text (Chinese jieba, pinyin, OpenCC Traditional/Simplified, SimHash near-dedup); **Meilisearch** indexes documents; **Redis** caches hot queries; a **Telegram Bot** exposes `/search`, `/suggest`, `/stats`.
+
+Python package name: `telegram-search-engine`. Repository folder/remote: `tg-search-engine`.
+
+## Positioning
+
+- Chinese: 自托管 Telegram 频道采集与中文友好全文搜索。
+- English: Self-hosted Telegram message search with Chinese NLP pipeline.
+- Stack: Python 3.11+, Telethon, Meilisearch, Redis, jieba, pypinyin, OpenCC, SimHash, python-telegram-bot, pydantic-settings.
+- Crawler entry: `python -m apps.crawler.main`
+- Bot entry: `python -m apps.bot.main`
+- Config: `configs/app.toml` + env overrides (see `.env.example`)
+- Repository: https://github.com/tytsxai/tg-search-engine
+- License: MIT
+
+## What it can do
+
+- Add channels via `python -m apps.crawler.channels add ...`
+- Crawl modes: `historical`, `realtime`, `both`
+- Full-text search through Meilisearch index (default name `telegram_messages`)
+- Chinese tokenization / pinyin / trad-simp conversion in pipeline
+- SimHash near-duplicate filtering
+- Redis cache TTL for search
+- Production compose overlay: `docker-compose.prod.yml`
+
+## What it does NOT do
+
+- Not a public SaaS search of all Telegram
+- Does not bypass Telegram access control
+- Latency depends on deploy size — no guaranteed SLA
+- First Telethon session often needs interactive phone login
+
+## Key docs
+
+- [README.md](README.md)
+- [docs/architecture.md](docs/architecture.md)
+- [docs/configuration.md](docs/configuration.md)
+- [docs/deployment.md](docs/deployment.md)
+- [docs/operations.md](docs/operations.md)
+- [docs/api.md](docs/api.md)
+
+## Quick start
+
+```bash
+git clone https://github.com/tytsxai/tg-search-engine.git
+cd tg-search-engine
+docker compose up -d
+cp .env.example .env
+python3 -m venv .venv && source .venv/bin/activate
+python -m pip install -e ".[dev]"
+python -m apps.crawler.channels add -100... --username ... --title ...
+python -m apps.crawler.main --mode both --limit 1000
+python -m apps.bot.main
+```
+
+## Search keywords
+
+Telegram search engine, Telegram 全文搜索, Meilisearch Telegram crawler, Telethon index messages, jieba pinyin Telegram, 频道消息搜索, self-hosted Telegram search

@@ -5,9 +5,24 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "telegram-search-engine"
 version = "0.1.0"
-description = "High-performance Telegram search engine with Chinese language support"
+description = "Self-hosted Telegram channel crawler and Meilisearch full-text search with Chinese NLP (jieba, pinyin, OpenCC)"
 readme = "README.md"
+license = "MIT"
 requires-python = ">=3.11"
+authors = [{ name = "tytsxai" }]
+keywords = [
+    "telegram",
+    "search",
+    "meilisearch",
+    "telethon",
+    "crawler",
+    "jieba",
+    "pinyin",
+    "full-text",
+    "chinese",
+    "self-hosted",
+    "全文搜索",
+]
 dependencies = [
     "python-telegram-bot>=21.0",
     "meilisearch>=0.31.0",
@@ -23,6 +38,12 @@ dependencies = [
     "aiohttp>=3.9.0",
     "structlog>=24.1.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/tytsxai/tg-search-engine"
+Repository = "https://github.com/tytsxai/tg-search-engine"
+Documentation = "https://github.com/tytsxai/tg-search-engine/tree/main/docs"
+Changelog = "https://github.com/tytsxai/tg-search-engine/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 dev = [
